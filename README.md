@@ -11,29 +11,38 @@ yarn add use-tasker
 ## Usage
 
 ```tsx
-import { useTasker, Tasker } from "use-tasker";
+import { useTasker, seq, concurrent, task } from "use-tasker";
 
 const sleep = (t) => new Promise((r) => setTimeout(r, t));
 
-function Foo() {
-  const tasks = new Tasker([
-    {
-      name: "1.5 seconds",
-      async fn() {
-        await sleep(1500);
-      },
-    },
-    {
-      name: "2.5 seconds",
-      async fn() {
-        await sleep(2500);
-      },
-    },
-  ]);
-  const { state, start } = useTasker(tasks);
+function Pipeline() {
+  const { state, start } = useTasker(
+    seq(
+      "pipeline",
+      task("title 1", async () => {
+        await sleep(2000);
+      }),
+      concurrent(
+        "deploy",
+        task("deploy pods", async () => {
+          await sleep(3000);
+        }),
+        task("deploy service", async () => {
+          await sleep(3000);
+        }),
+        task("deploy ingress", async () => {
+          await sleep(3000);
+        })
+      )
+    )
+  );
 
-  return <div>
-    <input type="button" value="Start" onClick={() => start()}>
-  </div>;
+  return (
+    <div>
+      <pre>
+        <code>{JSON.stringify(state, null, 2)}</code>
+      </pre>
+    </div>
+  );
 }
 ```
