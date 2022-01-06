@@ -1,20 +1,25 @@
 import { TaskerState } from ".";
 
-export function getStateAtPath(
+export function updateStateAtPath(
   state: TaskerState,
-  path: number[]
+  path: number[],
+  status: TaskerState["status"],
+  error?: TaskerState["error"]
 ): TaskerState {
-  if (path.length === 0) return state;
+  if (path.length === 0)
+    return {
+      ...state,
+      status,
+      ...(error ? { error } : undefined),
+    };
 
-  let nextState = state.tasks[path[0]];
-
-  for (let i = 1; i < path.length; i++) {
-    const n = path[i];
-    if (nextState.tasks == null) {
-      throw new Error("Internal Error. Path not found");
-    }
-    nextState = nextState.tasks[n];
-  }
-
-  return nextState;
+  const [first, ...rest] = path;
+  return {
+    ...state,
+    tasks: [
+      ...state.tasks.slice(0, first),
+      updateStateAtPath(state.tasks[first], rest, status, error),
+      ...state.tasks.slice(first + 1),
+    ],
+  };
 }

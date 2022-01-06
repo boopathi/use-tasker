@@ -1,8 +1,6 @@
 import { useReducer } from "react";
-import produce from "immer";
-
 import { TaskList, run, isTask } from "./execute";
-import { getStateAtPath } from "./path";
+import { updateStateAtPath } from "./path";
 
 type TaskRunStatus = "NOT_STARTED" | "LOADING" | "SUCCESS" | "ERROR";
 
@@ -19,7 +17,7 @@ export interface TaskerState {
   error?: any;
 }
 
-function getStateFromTaskList<T>(taskList: TaskList): TaskerState {
+export function getStateFromTaskList<T>(taskList: TaskList): TaskerState {
   return {
     status: "NOT_STARTED",
     title: taskList.title,
@@ -48,16 +46,14 @@ function taskStateReducer(state: TaskerState, action: Action) {
     case "RESET":
       return resetState(state);
     case "START":
-      return produce(state, (draft) => {
-        const subState = getStateAtPath(draft, action.path);
-        subState.status = "LOADING";
-      });
+      return updateStateAtPath(state, action.path, "LOADING");
     case "END":
-      return produce(state, (draft) => {
-        const subState = getStateAtPath(draft, action.path);
-        subState.status = action.error ? "ERROR" : "SUCCESS";
-        subState.error = action.error;
-      });
+      return updateStateAtPath(
+        state,
+        action.path,
+        action.error ? "ERROR" : "SUCCESS",
+        action.error
+      );
   }
 
   return state;

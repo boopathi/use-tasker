@@ -38,9 +38,7 @@
     "start": "next",
     "test": "jest"
   },
-  "dependencies": {
-    "immer": "^9.0.7"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/jest": "^27.4.0",
     "@types/react": "^17.0.38",
