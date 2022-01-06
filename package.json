@@ -20,11 +20,17 @@
   "dependencies": {
     "immer": "^9.0.7"
   },
+  "peerDependencies": {
+    "react": ">16.8"
+  },
   "files": [
     "dist",
     "LICENSE",
     "README.md"
   ],
+  "engines": {
+    "node": ">=14"
+  },
   "devDependencies": {
     "@types/jest": "^27.4.0",
     "@types/react": "^17.0.38",
