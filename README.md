@@ -76,7 +76,8 @@ task(name, taskFn);
 ```
 
 - **name**: `string`- name of the task
-- **taskFn**: `() => any | Promise<any>` - the task function
+- **taskFn**: `(context) => any | Promise<any>` - the task function
+  - **context**: `any` - the context passed to `useTasker`
 - _returns_ `Task`
 
 ### `seq`
