@@ -22,6 +22,7 @@
     "email": "me@boopathi.in",
     "url": "https://boopathi.blog"
   },
+  "sideEffects": false,
   "main": "lib/index.js",
   "module": "esm/index.js",
   "files": [
