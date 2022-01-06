@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "ES2015",
+    "outDir": "dist/es6",
+    "noEmit": false,
+    "declaration": true
+  },
+  "include": ["src/"]
+}

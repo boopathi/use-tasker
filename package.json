@@ -2,9 +2,13 @@
   "name": "use-tasker",
   "version": "0.0.1",
   "scripts": {
-    "dev": "next dev"
+    "dev": "next dev",
+    "build:es6": "tsc -p tsconfig.dist.es6.json",
+    "build:commonjs": "tsc -p tsconfig.dist.commonjs.json",
+    "build": "yarn build:es6 && yarn build:commonjs"
   },
-  "main": "lib/index.js",
+  "main": "dist/commonjs/index.js",
+  "module": "dist/es6/index.js",
   "license": "MIT",
   "author": {
     "name": "Boopathi Rajaa",
@@ -14,6 +18,11 @@
   "dependencies": {
     "immer": "^9.0.7"
   },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
   "devDependencies": {
     "@types/jest": "^27.4.0",
     "@types/react": "^17.0.38",
