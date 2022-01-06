@@ -7,7 +7,8 @@
     "build:commonjs": "tsc -p tsconfig.dist.commonjs.json",
     "build": "yarn build:es6 && yarn build:commonjs",
     "check-format": "prettier --no-config -l './**/*.*'",
-    "test": "jest"
+    "test": "jest",
+    "start": "next"
   },
   "main": "dist/commonjs/index.js",
   "module": "dist/es6/index.js",
