@@ -52,3 +52,53 @@ function Pipeline() {
   );
 }
 ```
+
+## API
+
+### `useTasker`
+
+```ts
+const { state, start } = useTasker(taskList, context);
+```
+
+- **taskList**: `TaskList` - The `TaskList` returned by `seq` or `concurrent` functions described below
+- **context**: `any` - The parameter passed to all `taskFn` functions. You can use this as an internal state to pass values from one task to another.
+- _returns_ `{ state, start }`
+- **state**: `TaskerState` - A nested structure that is updated as the tasks complete. This is the store of a reducer.
+- **start**: `() => void` - The function to start running the tasks. Add this as the click event handler of a button or a similar other thing.
+
+### `task`
+
+The task specifier
+
+```ts
+task(name, taskFn);
+```
+
+- **name**: `string`- name of the task
+- **taskFn**: `() => any | Promise<any>` - the task function
+- _returns_ `Task`
+
+### `seq`
+
+```ts
+seq(name, ...taskLike);
+```
+
+- **name**: `string`- name for the sequence
+- **taskLike**: `Task | TaskList` - a `Task` returned by the `task` function or another seq or concurrent `TaskList` returned by `seq` or `concurrent` functions
+- _returns_ `TaskList`
+
+### `concurrent`
+
+```ts
+concurrent(name, ...taskLike);
+```
+
+- **name**: `string`- name for the concurrent tasks
+- **taskLike**: `Task | TaskList` - a `Task` returned by the `task` function or another seq or concurrent `TaskList` returned by `seq` or `concurrent` functions
+- _returns_ `TaskList`
+
+### License
+
+MIT
