@@ -1,0 +1,9 @@
+.next
+dist
+node_modules
+.editorconfig
+LICENSE
+*.log
+.gitignore
+.prettierignore
+yarn.lock

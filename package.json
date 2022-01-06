@@ -5,7 +5,9 @@
     "dev": "next dev",
     "build:es6": "tsc -p tsconfig.dist.es6.json",
     "build:commonjs": "tsc -p tsconfig.dist.commonjs.json",
-    "build": "yarn build:es6 && yarn build:commonjs"
+    "build": "yarn build:es6 && yarn build:commonjs",
+    "check-format": "prettier --no-config -l './**/*.*'",
+    "test": "jest"
   },
   "main": "dist/commonjs/index.js",
   "module": "dist/es6/index.js",
@@ -28,6 +30,7 @@
     "@types/react": "^17.0.38",
     "jest": "^27.4.5",
     "next": "^12.0.7",
+    "prettier": "^2.5.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "ts-jest": "^27.1.2",
