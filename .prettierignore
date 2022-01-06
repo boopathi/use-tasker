@@ -1,5 +1,6 @@
 .next
-dist
+lib
+esm
 node_modules
 .editorconfig
 LICENSE
