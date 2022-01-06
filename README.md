@@ -10,6 +10,12 @@ yarn add use-tasker
 
 ## Usage
 
+Import the repo and try out the example in CodeSandbox:
+
+https://codesandbox.io/s/github/boopathi/use-tasker
+
+Example:
+
 ```tsx
 import { useTasker, seq, concurrent, task } from "use-tasker";
 
