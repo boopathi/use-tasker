@@ -1,6 +1,6 @@
 {
   "name": "use-tasker",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "scripts": {
     "dev": "next dev",
     "build:es6": "tsc -p tsconfig.dist.es6.json",
