@@ -1,24 +1,39 @@
 export interface TaskList {
   title: string;
-  tasks: Task[];
+  tasks: TaskLike[];
   concurrent?: boolean;
 }
 
 export interface Task {
   title: string;
-  task: ((prevValue?: any) => any | Promise<any>) | TaskList;
+  task: (context: unknown) => any | Promise<any>;
 }
+
+export type TaskLike = Task | TaskList;
 
 export interface TaskExecutorOptions {
+  context: unknown;
   beforeTask: (path: any[]) => any;
-  afterTask: (path: any[], result: any, error: any) => any;
+  afterTask: (path: any[], error: any) => any;
 }
 
-export async function run(taskList: TaskList, options: TaskExecutorOptions) {
-  return executeTaskList(taskList, options, []);
+export async function run(
+  taskList: TaskList,
+  options: TaskExecutorOptions,
+  throwOnFailure = false
+) {
+  try {
+    return await executeTaskList(taskList, options, []);
+  } catch (e) {
+    if (throwOnFailure) throw e;
+  }
 }
 
-export function seq(title: string, ...tasks: Task[]): TaskList {
+export function isTask(task: TaskLike): task is Task {
+  return Object.prototype.hasOwnProperty.call(task, "task");
+}
+
+export function seq(title: string, ...tasks: TaskLike[]): TaskList {
   return {
     title,
     tasks,
@@ -26,7 +41,7 @@ export function seq(title: string, ...tasks: Task[]): TaskList {
   };
 }
 
-export function concurrent(title: string, ...tasks: Task[]): TaskList {
+export function concurrent(title: string, ...tasks: TaskLike[]): TaskList {
   return {
     title,
     tasks,
@@ -41,77 +56,79 @@ export function task(title: string, task: Task["task"]): Task {
   };
 }
 
+export class ConcurrentTasksError extends Error {
+  constructor(public errors: any[]) {
+    super(`Multiple errors ${errors}`);
+  }
+}
+
 async function executeTaskList(
   taskList: TaskList,
   options: TaskExecutorOptions,
   previousPath: number[]
 ) {
   options.beforeTask(previousPath);
-  let result = [];
-  let error;
-  if (taskList.concurrent) {
-    const allSettleResults = await Promise.allSettled(
-      taskList.tasks.map((task, i) =>
-        executeTask(task, options, [...previousPath, i])
-      )
-    );
-    for (const r of allSettleResults) {
-      if (r.status === "rejected") {
-        if (!Array.isArray(error)) error = [r.reason];
-        else error.push(r.reason);
-      } else {
-        result.push(r.value);
-      }
-    }
-  } else {
-    let prevValue;
-    for (const [i, task] of taskList.tasks.entries()) {
-      try {
-        prevValue = await executeTask(
-          task,
-          options,
-          [...previousPath, i],
-          prevValue
-        );
-        if (prevValue.error != null) {
-          error = prevValue.error;
-          break;
-        }
+  try {
+    taskList.concurrent
+      ? await executeConcurrentTaskList(taskList, options, previousPath)
+      : await executeSeqTaskList(taskList, options, previousPath);
+  } catch (e: any) {
+    options.afterTask(previousPath, e);
+    throw e;
+  }
+  options.afterTask(previousPath, null);
+}
 
-        result.push(prevValue);
-      } catch (e) {
-        error = e;
-        break;
-      }
+async function executeConcurrentTaskList(
+  taskList: TaskList,
+  options: TaskExecutorOptions,
+  previousPath: number[]
+) {
+  const allSettleResults = await Promise.allSettled(
+    taskList.tasks.map((task, i) =>
+      isTask(task)
+        ? executeTask(task, options, [...previousPath, i])
+        : executeTaskList(task, options, [...previousPath, i])
+    )
+  );
+  handleConcurrentErrors(allSettleResults);
+}
+
+async function executeSeqTaskList(
+  taskList: TaskList,
+  options: TaskExecutorOptions,
+  previousPath: number[]
+) {
+  for (const [i, task] of taskList.tasks.entries()) {
+    isTask(task)
+      ? await executeTask(task, options, [...previousPath, i])
+      : await executeTaskList(task, options, [...previousPath, i]);
+  }
+}
+
+function handleConcurrentErrors(allSettleResults: PromiseSettledResult<any>[]) {
+  const errors = [];
+  for (const r of allSettleResults) {
+    if (r.status === "rejected") {
+      errors.push(r.reason);
     }
   }
-
-  if (error) {
-    options.afterTask(previousPath, null, error);
-  } else {
-    options.afterTask(previousPath, result, null);
+  if (errors.length > 0) {
+    throw new ConcurrentTasksError(errors);
   }
-
-  return { result, error };
 }
 
 async function executeTask(
   task: Task,
   options: TaskExecutorOptions,
-  path: number[],
-  prevValue?: any
+  path: number[]
 ) {
-  if (typeof task.task === "function") {
-    options.beforeTask(path);
-    try {
-      const result = await task.task(prevValue);
-      options.afterTask(path, result, null);
-      return { result };
-    } catch (error: any) {
-      options.afterTask(path, null, error);
-      throw error;
-    }
-  } else {
-    return executeTaskList(task.task, options, path);
+  options.beforeTask(path);
+  try {
+    await task.task(options.context);
+  } catch (e: any) {
+    options.afterTask(path, e);
+    throw e;
   }
+  options.afterTask(path, null);
 }

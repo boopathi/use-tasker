@@ -1,7 +1,7 @@
 import { useReducer } from "react";
 import produce from "immer";
 
-import { TaskList, run } from "./execute";
+import { TaskList, run, isTask } from "./execute";
 import { getStateAtPath } from "./path";
 
 type TaskRunStatus = "NOT_STARTED" | "LOADING" | "SUCCESS" | "ERROR";
@@ -9,7 +9,6 @@ type TaskRunStatus = "NOT_STARTED" | "LOADING" | "SUCCESS" | "ERROR";
 interface Action {
   kind: "RESET" | "START" | "END";
   path: number[];
-  result?: any;
   error?: any;
 }
 
@@ -17,23 +16,21 @@ export interface TaskerState {
   title: string;
   status: TaskRunStatus;
   tasks?: TaskerState[];
-  result?: any;
   error?: any;
 }
 
-function getStateFromTaskList(taskList: TaskList): TaskerState {
+function getStateFromTaskList<T>(taskList: TaskList): TaskerState {
   return {
     status: "NOT_STARTED",
     title: taskList.title,
     tasks: taskList.tasks.map((task) => {
-      if (typeof task.task === "function") {
+      if (isTask(task)) {
         return {
           status: "NOT_STARTED" as const,
           title: task.title,
         };
-      } else {
-        return getStateFromTaskList(task.task);
       }
+      return getStateFromTaskList(task);
     }),
   };
 }
@@ -59,7 +56,6 @@ function taskStateReducer(state: TaskerState, action: Action) {
       return produce(state, (draft) => {
         const subState = getStateAtPath(draft, action.path);
         subState.status = action.error ? "ERROR" : "SUCCESS";
-        subState.result = action.result;
         subState.error = action.error;
       });
   }
@@ -67,7 +63,7 @@ function taskStateReducer(state: TaskerState, action: Action) {
   return state;
 }
 
-export function useTasker(taskList: TaskList) {
+export function useTasker(taskList: TaskList, context: any = {}) {
   const [state, dispatch] = useReducer(
     taskStateReducer,
     getStateFromTaskList(taskList)
@@ -77,11 +73,12 @@ export function useTasker(taskList: TaskList) {
     start() {
       dispatch({ kind: "RESET", path: [] });
       run(taskList, {
+        context,
         beforeTask(path) {
           dispatch({ kind: "START", path });
         },
-        afterTask(path, result, error) {
-          dispatch({ kind: "END", path, result, error });
+        afterTask(path, error) {
+          dispatch({ kind: "END", path, error });
         },
       });
     },

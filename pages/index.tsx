@@ -1,34 +1,52 @@
 import { concurrent, seq, task, useTasker, TaskerState } from "../src";
 
-const sleep = (t, x) => new Promise((r) => setTimeout(() => r(x), t));
+const sleep = (t) => new Promise((r) => setTimeout(r, t));
 
 export default function Home() {
   const { state, start } = useTasker(
     seq(
       "seq - top",
-      task("1", () => sleep(1000, "1")),
-      task("1a", (x) => sleep(1000, x.result + "1")),
-      task(
-        "2",
-        concurrent(
-          "concurrent leaves",
-          task("2.1", () => sleep(2000, "2.1")),
-          task("2.2", async () => {
-            await sleep(2000, "asdfasdf");
-            throw new Error("skdksks");
-          })
-        )
+      task("1", (ctx: any) => {
+        ctx.counter++;
+        return sleep(1000);
+      }),
+      task("1a", (ctx: any) => {
+        ctx.counter++;
+        return sleep(1000);
+      }),
+      concurrent(
+        "concurrent leaves",
+        task("2.1", (ctx: any) => {
+          ctx.counter++;
+          return sleep(2000);
+        }),
+        task("2.2", (ctx: any) => {
+          ctx.counter++;
+          return sleep(1000);
+        })
       ),
-      task(
-        "3",
-        seq(
-          "seq leaves",
-          task("3.1s", (x) => sleep(1000, x + "3.1")),
-          task("3.2s", () => sleep(1000, "3.2")),
-          task("3.3s", () => sleep(1000, "3.3"))
-        )
-      )
-    )
+      seq(
+        "seq leaves",
+        task("3.1s", (ctx: any) => {
+          ctx.counter++;
+          return sleep(1000);
+        }),
+        task("3.2s", (ctx: any) => {
+          ctx.counter++;
+          return sleep(1000);
+        }),
+        task("3.3s", (ctx: any) => {
+          ctx.counter++;
+          return sleep(1000);
+        })
+      ),
+      task("4", (ctx: any) => {
+        console.log(ctx);
+      })
+    ),
+    {
+      counter: 0,
+    }
   );
 
   return (
@@ -52,7 +70,6 @@ function ListItem({ data }: { data: TaskerState }) {
     <li>
       {getIcon(data.status)} {data.title}{" "}
       {data.error ? <Err error={data.error} /> : null}
-      {data.result ? <span>{JSON.stringify(data.result)}</span> : null}
       {data.tasks ? <List tasks={data.tasks} /> : null}
     </li>
   );
@@ -68,7 +85,14 @@ function List({ tasks }: { tasks: TaskerState["tasks"] }) {
   );
 }
 
-function Err({ error }: { error: Error }) {
+function Err({ error }: { error: Error | Error[] }) {
+  if (Array.isArray(error)) {
+    return (
+      <span style={{ color: "red" }}>
+        ({error.map((it) => it.message).join(", ")})
+      </span>
+    );
+  }
   return <span style={{ color: "red" }}>({error.message})</span>;
 }
 
