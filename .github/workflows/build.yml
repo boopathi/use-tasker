@@ -22,5 +22,6 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
+      - run: yarn
       - run: yarn check-format && yarn test
       - run: yarn build
