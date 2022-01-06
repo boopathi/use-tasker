@@ -100,6 +100,10 @@ concurrent(name, ...taskLike);
 - **taskLike**: `Task | TaskList` - a `Task` returned by the `task` function or another seq or concurrent `TaskList` returned by `seq` or `concurrent` functions
 - _returns_ `TaskList`
 
+## Related
+
+This project is inspired by [Listr](https://github.com/SamVerschueren/listr), which is a terminal task list.
+
 ### License
 
 MIT
